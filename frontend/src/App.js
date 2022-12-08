@@ -6,6 +6,7 @@ import NotFound from 'components/NotFound';
 import { Provider } from 'react-redux';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import user from 'reducers/user';
+import "./index.css";
 
 const reducer = combineReducers({
   user: user.reducer
