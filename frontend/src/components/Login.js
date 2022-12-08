@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import { useDispatch, useSelector, batch } from "react-redux";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { API_URL } from "utils/utils";
 import user from "reducers/user";
 
@@ -11,6 +11,7 @@ const Login = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const accessToken = useSelector((store) => store.user.accessToken);
+    
     useEffect( () => {
         if (accessToken) {
             navigate("/");
@@ -46,28 +47,55 @@ const Login = () => {
                 }
             })
     }
+
     return (
         <>
-        <label htmlFor="register">Register</label>
-        <input type="radio" id="register" checked={mode === "register"} onChange={()=>setMode("register")}/>
-        <label htmlFor="login">Login</label>
-        <input type="radio" id="login" checked={mode === "login"} onChange={()=>setMode("login")}/>
-        <form onSubmit={onFormSubmit}>
-            <label htmlFor="username">Username</label>
-            <input 
-                type="text" 
-                id="username" 
-                value={username} 
-                onChange={e => setUsername(e.target.value)}/>
-            <label htmlFor="password">Password</label>
-            <input 
-                type="password" 
-                id="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)}/>
-            <button type="submit">Submit</button>
-        </form>
-    </> 
+        <div className="outer-wrapper">
+          <div className="inner-wrapper">
+            <div className="heading">
+              <label htmlFor="Sign-Up">Create new account? SIGN UP</label>
+              <input
+              type="radio"
+              id="register"
+              checked={mode === "register"}
+              onChange={() => setMode("register")}
+            />
+          </div>
+          <div className="heading">
+            <label htmlFor="Sign-In"> Already have an account? SIGN IN</label>
+            <input
+              type="radio"
+              id="login"
+              checked={mode === "login"}
+              onChange={() => setMode("login")}
+            />
+          </div>
+  
+          <form onSubmit={onFormSubmit}>
+            <label htmlFor="username">Username: </label>
+  
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <br />
+            <label htmlFor="password">Password: </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <br />
+            <div className="button">
+              <button type="submit">SUBMIT</button>
+            </div>
+          </form>
+          </div>
+        </div>
+      </>
     );
 }
 

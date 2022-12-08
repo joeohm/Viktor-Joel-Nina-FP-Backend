@@ -1,6 +1,6 @@
 # Project Auth API
 
-In this weeks project we have built an API with authenti
+In this weeks project we have built an API with authentication 
 
 ## The problem
 
