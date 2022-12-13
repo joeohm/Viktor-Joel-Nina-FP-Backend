@@ -14,12 +14,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* ******** OBS: om vi vill använda: npm i mongoose-type-email *********** */
-/* Och möjligtvis 
-  var mongoose = require('mongoose');
 require('mongoose-type-email');
-mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid'
-*/
+mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid';
+
 const UserSchema = new mongoose.Schema({
   email: {
     type: mongoose.SchemaTypes.Email,
@@ -28,16 +25,17 @@ const UserSchema = new mongoose.Schema({
     unique: true
   },
 
+  /* Unclear if we need this
   username: {
     type: String,
     required: true,
     unique: true
   },
+  */
   password: {
     type: String,
     required: true
   },
-  // npm install crypto
   accessToken: {
     type: String,
     default: () => crypto.randomBytes(128).toString("hex")
@@ -47,7 +45,7 @@ const UserSchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 
 app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
@@ -56,11 +54,11 @@ app.post("/register", async (req, res) => {
         response: "Password must be at least 8 characters long"
       });
     } else {
-      const newUser = await new User({username: username, password: bcrypt.hashSync(password, salt)}).save();
+      const newUser = await new User({email: email, password: bcrypt.hashSync(password, salt)}).save();
       res.status(201).json({
         success: true,
         response: {
-          username: newUser.username,
+          email: newUser.email,
           accessToken: newUser.accessToken,
           id: newUser._id
         }
