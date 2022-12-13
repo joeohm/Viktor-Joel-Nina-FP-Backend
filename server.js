@@ -4,6 +4,60 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
+/////////// EMAIL-SENDER /////////////
+
+const cron = require('node-cron');
+const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const cronJob = {
+  // every2sec: '*/2 * * * * *',
+  testSchedule: '*/1 * * * *',
+  schedule: '0 7 * * *',
+  info: '“At 07:00 GMT every day .”'
+};
+
+cron.schedule(cronJob.schedule, () => {
+  mailService();
+});
+
+const mailService = () => {
+  let mailTransporter = nodemailer.createTransport({
+    service: process.env.MAILER_SERVICE,
+    auth: {
+      user: process.env.MAILER_USER,
+      pass: process.env.MAILER_PASSWORD
+    }
+  });
+
+  let mailDetails = {
+    from: 'birthdayremindersender@gmail.com',
+    to: 'joel.ohman@entryevent.se',
+    subject: 'Test mail using Cron Job',
+    text: `${new Date()} - Node.js Cron Job Email Demo Test from Reflectoring Blog`
+  };
+  
+  mailTransporter.sendMail(mailDetails, (err, data) => {
+    if (err) {
+      console.log('error occured', err.message);
+    } else {
+      console.log('-----------------------');
+      console.log('email sent successfully');
+    }
+  });
+};
+
+app.get('/cron', (req, res) => {
+  res.json({
+    cron: cronJob
+  });
+});
+
+
+////////////////////////////////////////
+
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
