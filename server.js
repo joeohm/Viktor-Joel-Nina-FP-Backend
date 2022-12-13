@@ -38,7 +38,7 @@ const mailService = () => {
     subject: 'Test mail using Cron Job',
     text: `${new Date()} - Node.js Cron Job Email Demo Test from Reflectoring Blog`
   };
-  
+
   mailTransporter.sendMail(mailDetails, (err, data) => {
     if (err) {
       console.log('error occured', err.message);
@@ -48,13 +48,6 @@ const mailService = () => {
     }
   });
 };
-
-app.get('/cron', (req, res) => {
-  res.json({
-    cron: cronJob
-  });
-});
-
 
 ////////////////////////////////////////
 
@@ -211,6 +204,13 @@ app.post("/thoughts", async (req, res) => {
 app.get("/", (req, res) => {
   res.send("Hello Joel and Nina");
 });
+
+app.get('/cron', (req, res) => {
+  res.json({
+    cron: cronJob
+  });
+});
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
