@@ -4,17 +4,30 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
-const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-mongo";
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
-const port = process.env.PORT || 8090;
+const port = process.env.PORT || 8080;
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+/* ******** OBS: om vi vill använda: npm i mongoose-type-email *********** */
+/* Och möjligtvis 
+  var mongoose = require('mongoose');
+require('mongoose-type-email');
+mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid'
+*/
 const UserSchema = new mongoose.Schema({
+  email: {
+    type: mongoose.SchemaTypes.Email,
+    required: true, 
+    correctTld: true,
+    unique: true
+  },
+
   username: {
     type: String,
     required: true,
@@ -109,7 +122,7 @@ const authenticateUser = async (req, res, next) => {
   }
 }
 
-const ThoughtSchema = new mongoose.Schema({
+/* const ThoughtSchema = new mongoose.Schema({
   message: {
     type: String,
   },
@@ -142,9 +155,9 @@ app.post("/thoughts", async (req, res) => {
     res.status(400).json({success: false, response: error});
   }
 });
-
+ */
 app.get("/", (req, res) => {
-  res.send("Hello Technigo!");
+  res.send("Hello Joel and Nina");
 });
 
 app.listen(port, () => {
