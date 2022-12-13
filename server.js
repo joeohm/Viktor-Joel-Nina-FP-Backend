@@ -4,6 +4,16 @@ import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
+mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.Promise = Promise;
+
+const port = process.env.PORT || 8080;
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
 /////////// EMAIL-SENDER /////////////
 
 const cron = require('node-cron');
@@ -50,16 +60,6 @@ const mailService = () => {
 };
 
 ////////////////////////////////////////
-
-const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
-mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
-mongoose.Promise = Promise;
-
-const port = process.env.PORT || 8080;
-const app = express();
-
-app.use(cors());
-app.use(express.json());
 
 require('mongoose-type-email');
 mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid';
