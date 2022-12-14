@@ -89,6 +89,17 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
+const BirthdaySchema = new mongoose.Schema({
+  firstName: {
+    type: String,
+    required: true
+  },
+  lastName: {
+    type: String,
+    required: true
+  }
+})
+
 const User = mongoose.model("User", UserSchema);
 
 app.post("/register", async (req, res) => {
@@ -166,6 +177,8 @@ const authenticateUser = async (req, res, next) => {
     })
   }
 }
+
+
 
 /* const ThoughtSchema = new mongoose.Schema({
   message: {
