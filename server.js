@@ -117,6 +117,8 @@ const BirthdaySchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 const Birthday = mongoose.model("Birthday", BirthdaySchema);
 
+///////////// Endpoints for user ////////////////////
+
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   console.log(req.body)
@@ -248,14 +250,10 @@ app.patch("/change-password", async (req, res) => {
   }
 });
 
+/////////////////////////////////////////////////////
 
-app.get("/", (req, res) => {
-  res.send("Hello Viktor, Joel and Nina");
-});
-// Put in express list node
+//////// Endpoints for birthday reminders ///////////
 
-// Route where a new birthday is created, which is stored in the backend
-// shoud we send userId?
 app.post('/birthday', authenticateUser);
 app.post("/birthday", async (req, res) => {
   const {firstName, lastName, birthDate, userId, birthdayReminderSettings, otherInfo} = req.body;
@@ -375,6 +373,11 @@ app.get('/all-birthdays', async (req, res) => {
   }
 });
 
+
+// Put in express list node
+app.get("/", (req, res) => {
+  res.send("Hello Viktor, Joel and Nina");
+});
 
 app.get('/cron', (req, res) => {
   res.json({
