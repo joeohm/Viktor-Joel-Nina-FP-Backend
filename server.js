@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import { differenceInDays } from 'date-fns'
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -33,7 +34,19 @@ cron.schedule(cronJob.schedule, () => {
   mailService();
 });
 
-const mailService = () => {
+const convertDate = (birthDate) => {
+  const day = String(birthDate.getDate()).padStart(2, 0);
+  const month = String(birthDate.getMonth() + 1).padStart(2, 0); // getMonth() starts at 0
+
+  // If birthday is in January, but today is December, add 1 year to converted year
+  // Since 30 days is the maximum setting, only do this for January
+  const convertedYear = month === '01' && new Date().getMonth() !== 0 ? new Date().getFullYear() + 1 : new Date().getFullYear()
+
+  // 23:59 to include current day
+  return new Date(`${convertedYear}-${month}-${day} 23:59`)
+}
+
+const mailService = async () => {
   let mailTransporter = nodemailer.createTransport({
     service: process.env.MAILER_SERVICE,
     auth: {
@@ -42,21 +55,47 @@ const mailService = () => {
     }
   });
 
-  let mailDetails = {
-    from: 'birthdayremindersender@gmail.com',
-    to: 'joel.ohman@entryevent.se',
-    subject: 'Test mail using Cron Job',
-    text: `${new Date()} - Node.js Cron Job Email Demo Test from Reflectoring Blog`
-  };
+// Get all birthdays and users
+const birthdays = await Birthday.find()
+const users = await User.find()
 
-  mailTransporter.sendMail(mailDetails, (err, data) => {
-    if (err) {
-      console.log('error occured', err.message);
-    } else {
-      console.log('-----------------------');
-      console.log('email sent successfully');
-    }
-  });
+// For every birthday, compare the birthdate with current date
+// if the difference in days matches one of the birthdayReminderSettings, send email
+birthdays.forEach((birthday) => {
+  const {birthDate, birthdayReminderSettings} = birthday
+
+  // In order to check for reminders every year, convert the birthdate to current year 
+  const convertedBirthDate = convertDate(birthDate)
+
+  // Compare the converted date to today's date and get the difference in days
+  const difference = differenceInDays(convertedBirthDate, new Date())
+
+  // Check if difference between dates corresponds with one of the settings for reminders
+  const shouldSendEmail = birthdayReminderSettings.some(setting => setting === difference)
+
+  
+  if (shouldSendEmail) {
+    // Find the email of the owner of the birthday reminder
+    const email = users.find((user) => user._id.toString() === birthday.userId.toString()).username
+    console.log(email)
+
+    let mailDetails = {
+      from: 'birthdayremindersender@gmail.com',
+      to: email,
+      subject: 'Birthday reminder!',
+      text: `Hey There! Looks like ${birthday.firstName} ${birthday.lastName} has a birthday ${difference === 0 ? 'TODAY!' : `in ${difference} days`}! Don't forget to get them something nice! ${birthday.otherInfo}`
+    };
+
+    mailTransporter.sendMail(mailDetails, (err, data) => {
+      if (err) {
+        console.log('error occured', err.message);
+      } else {
+        console.log('-----------------------');
+        console.log('email sent successfully');
+      }
+    });
+  }
+})
 };
 
 ////////////////////////////////////////
