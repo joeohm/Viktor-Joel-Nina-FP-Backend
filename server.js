@@ -86,7 +86,11 @@ const UserSchema = new mongoose.Schema({
   accessToken: {
     type: String,
     default: () => crypto.randomBytes(128).toString("hex")
-  }
+  },
+  birthdayReminders: [{
+    type: Schema.Types.ObjectId,
+    ref: "Birthday"
+  }]
 });
 
 const BirthdaySchema = new mongoose.Schema({
@@ -97,10 +101,26 @@ const BirthdaySchema = new mongoose.Schema({
   lastName: {
     type: String,
     required: true
+  },
+  birthDate: {
+    type: Date,
+    required: true
+  },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
+  },
+  birthdayReminderSettings: {
+    default: [0]
+  },
+  otherInfo: {
+    type: String,
+    maxlength: 250
   }
 })
 
 const User = mongoose.model("User", UserSchema);
+const Birthday = mongoose.model("Birthday", BirthdaySchema);
 
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
@@ -131,15 +151,15 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    const user = await User.findOne({username});
+    const user = await User.findOne({email});
     if (user && bcrypt.compareSync(password, user.password)) {
       res.status(200).json({
         success: true,
         response: {
-          username: user.username,
+          email: user.email,
           id: user._id,
           accessToken: user.accessToken
         }
