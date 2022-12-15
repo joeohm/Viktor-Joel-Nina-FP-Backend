@@ -105,7 +105,8 @@ const BirthdaySchema = new mongoose.Schema({
   },
   // behöver fixa denna för att kunna sätta default värdet till [0], verkar inte fungera
   birthdayReminderSettings: {
-    default: [0]
+    type: Array,
+    default: 0
   },
   otherInfo: {
     type: String,
@@ -146,15 +147,15 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   try {
-    const user = await User.findOne({email});
+    const user = await User.findOne({username});
     if (user && bcrypt.compareSync(password, user.password)) {
       res.status(200).json({
         success: true,
         response: {
-          email: user.email,
+          username: user.username,
           id: user._id,
           accessToken: user.accessToken
         }
@@ -193,6 +194,60 @@ const authenticateUser = async (req, res, next) => {
   }
 }
 
+app.delete('/user', authenticateUser);
+app.delete('/user', async (req, res) => {
+  const { id } = req.body;
+
+  console.log(req.body)
+
+  const userToDelete = await User.findByIdAndDelete(id);
+  try {
+    if (userToDelete) {
+      res.status(200).json(userToDelete);
+    } else {
+      res
+        .status(404)
+        .json({ success: false, response: 'User was not found' });
+    }
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
+  }
+});
+
+app.patch('/change-password', authenticateUser);
+app.patch("/change-password", async (req, res) => {
+  const { id, password } = req.body;
+
+  console.log(req.body)
+  try {
+    const salt = bcrypt.genSaltSync();
+    if (password.length < 8) {
+      res.status(400).json({
+        success: false,
+        response: "Password must be at least 8 characters long"
+      });
+    } else {
+      const passwordToUpdate = await User.findByIdAndUpdate(
+        {_id: id},
+        {password: bcrypt.hashSync(password, salt)},
+        { new: true }
+      );
+      res.status(200).json({
+        success: true,
+        response: passwordToUpdate
+      });
+    }
+  } catch(error) {
+      res.status(400).json({
+        success: false,
+        response: error
+      });
+  }
+});
+
 
 app.get("/", (req, res) => {
   res.send("Hello Viktor, Joel and Nina");
@@ -201,6 +256,7 @@ app.get("/", (req, res) => {
 
 // Route where a new birthday is created, which is stored in the backend
 // shoud we send userId?
+app.post('/birthday', authenticateUser);
 app.post("/birthday", async (req, res) => {
   const {firstName, lastName, birthDate, userId, birthdayReminderSettings, otherInfo} = req.body;
 
@@ -213,7 +269,112 @@ app.post("/birthday", async (req, res) => {
     res.status(400).json({success: false, response: error});
   }
 });
- 
+
+app.patch('/birthday', authenticateUser);
+app.patch('/birthday', async (req, res) => {
+  const {firstName, lastName, birthDate, id, birthdayReminderSettings, otherInfo} = req.body;
+
+  console.log(req.body)
+
+  const birthdayToUpdate = await Birthday.findByIdAndUpdate(
+    {_id: id},
+    { 
+      firstName: firstName,
+      lastName: lastName,
+      birthDate: birthDate,
+      birthdayReminderSettings: birthdayReminderSettings,
+      otherInfo: otherInfo
+    },
+    { new: true }
+  );
+  try {
+    if (birthdayToUpdate) {
+      console.log(birthdayToUpdate);
+      res.status(200).json(birthdayToUpdate);
+    } else {
+      res
+        .status(404)
+        .json({ success: false, response: 'Birthday was not found' });
+    }
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
+  }
+});
+
+app.delete('/birthday', authenticateUser);
+app.delete('/birthday', async (req, res) => {
+  const { id } = req.body;
+
+  console.log(req.body)
+
+  const birthdayToDelete = await Birthday.findByIdAndDelete(id);
+  try {
+    if (birthdayToDelete) {
+      res.status(200).json(birthdayToDelete);
+    } else {
+      res
+        .status(404)
+        .json({ success: false, response: 'Birthday was not found' });
+    }
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
+  }
+});
+
+app.get('/birthday', authenticateUser);
+app.get('/birthday', async (req, res) => {
+  const { id } = req.body;
+
+  console.log(req.body)
+
+  const birthday = await Birthday.findById(id);
+  try {
+    if (birthday) {
+      res.status(200).json(birthday);
+    } else {
+      res
+        .status(404)
+        .json({ success: false, response: 'Birthday was not found' });
+    }
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
+  }
+});
+
+app.get('/all-birthdays', authenticateUser);
+app.get('/all-birthdays', async (req, res) => {
+  const { userId } = req.body;
+
+  console.log(req.body)
+
+  // const birthdays = await Birthday.findById(userId);
+  const birthdays = await Birthday.find({userId})
+
+  try {
+    if (birthdays) {
+      res.status(200).json(birthdays);
+    } else {
+      res
+        .status(404)
+        .json({ success: false, response: 'Birthday was not found' });
+    }
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
+  }
+});
+
 
 app.get('/cron', (req, res) => {
   res.json({
