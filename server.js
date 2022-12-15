@@ -65,20 +65,12 @@ require('mongoose-type-email');
 mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid';
 
 const UserSchema = new mongoose.Schema({
-  email: {
+  username: {
     type: mongoose.SchemaTypes.Email,
     required: true, 
     correctTld: true,
     unique: true
   },
-
-  /* Unclear if we need this
-  username: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  */
   password: {
     type: String,
     required: true
@@ -88,13 +80,13 @@ const UserSchema = new mongoose.Schema({
     default: () => crypto.randomBytes(128).toString("hex")
   },
   birthdayReminders: [{
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: "Birthday"
   }]
 });
 
 const BirthdaySchema = new mongoose.Schema({
-  firstName: {
+ firstName: {
     type: String,
     required: true
   },
@@ -106,10 +98,12 @@ const BirthdaySchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: "User"
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   },
+  // behöver fixa denna för att kunna sätta default värdet till [0], verkar inte fungera
   birthdayReminderSettings: {
     default: [0]
   },
@@ -123,7 +117,8 @@ const User = mongoose.model("User", UserSchema);
 const Birthday = mongoose.model("Birthday", BirthdaySchema);
 
 app.post("/register", async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
+  console.log(req.body)
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
@@ -132,12 +127,12 @@ app.post("/register", async (req, res) => {
         response: "Password must be at least 8 characters long"
       });
     } else {
-      const newUser = await new User({email: email, password: bcrypt.hashSync(password, salt)}).save();
+      const newUser = await new User({username, password: bcrypt.hashSync(password, salt)}).save();
       res.status(201).json({
         success: true,
         response: {
-          email: newUser.email,
           accessToken: newUser.accessToken,
+          username: newUser.username,
           id: newUser._id
         }
       });
@@ -199,44 +194,26 @@ const authenticateUser = async (req, res, next) => {
 }
 
 
-
-/* const ThoughtSchema = new mongoose.Schema({
-  message: {
-    type: String,
-  },
-  createdAt: {
-    type: Date,
-    default: () => new Date() 
-  },
-  hearts: {
-    type: Number,
-    default: 0
-  }
-}); 
-
-
-const Thought = mongoose.model("Thought", ThoughtSchema);
-
-app.get("/thoughts", authenticateUser);
-app.get("/thoughts", async (req, res)=> {
-  const thoughts = await Thought.find({});
-  res.status(200).json({success: true, response: thoughts});
+app.get("/", (req, res) => {
+  res.send("Hello Viktor, Joel and Nina");
 });
+// Put in express list node
 
-app.post("/thoughts", authenticateUser)
-app.post("/thoughts", async (req, res) => {
-  const { message } = req.body;
+// Route where a new birthday is created, which is stored in the backend
+// shoud we send userId?
+app.post("/birthday", async (req, res) => {
+  const {firstName, lastName, birthDate, userId, birthdayReminderSettings, otherInfo} = req.body;
+
+  console.log("birthDate:", birthDate)
+
   try {
-    const newThought = await new Thought({message}).save();
-    res.status(201).json({success: true, response: newThought});
-  } catch (error) {
+    const newBirthday = await new Birthday({firstName, lastName, birthDate, userId, birthdayReminderSettings, otherInfo}).save();
+    res.status(201).json({success: true, response: newBirthday});
+  }catch (error){
     res.status(400).json({success: false, response: error});
   }
 });
- */
-app.get("/", (req, res) => {
-  res.send("Hello Joel and Nina");
-});
+ 
 
 app.get('/cron', (req, res) => {
   res.json({
