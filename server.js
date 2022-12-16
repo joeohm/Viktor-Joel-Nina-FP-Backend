@@ -42,8 +42,7 @@ const convertDate = (birthDate) => {
   // Since 30 days is the maximum setting, only do this for January
   const convertedYear = month === '01' && new Date().getMonth() !== 0 ? new Date().getFullYear() + 1 : new Date().getFullYear()
 
-  // 23:59 to include current day
-  return new Date(`${convertedYear}-${month}-${day} 23:59`)
+  return new Date(`${convertedYear}-${month}-${day}`)
 }
 
 const mailService = async () => {
@@ -67,8 +66,11 @@ birthdays.forEach((birthday) => {
   // In order to check for reminders every year, convert the birthdate to current year 
   const convertedBirthDate = convertDate(birthDate)
 
+  // new Date() but with time set to midnight UTC for comparison to work
+  const today = new Date(new Date().setUTCHours(0, 0, 0, 0))
+
   // Compare the converted date to today's date and get the difference in days
-  const difference = differenceInDays(convertedBirthDate, new Date())
+  const difference = differenceInDays(convertedBirthDate, today)
 
   // Check if difference between dates corresponds with one of the settings for reminders
   const shouldSendEmail = birthdayReminderSettings.some(setting => setting === difference)
