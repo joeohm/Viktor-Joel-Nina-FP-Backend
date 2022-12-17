@@ -85,7 +85,34 @@ birthdays.forEach((birthday) => {
       from: 'birthdayremindersender@gmail.com',
       to: email,
       subject: 'Birthday reminder!',
-      text: `Hey There! Looks like ${birthday.firstName} ${birthday.lastName} has a birthday ${difference === 0 ? 'TODAY!' : `in ${difference} days`}! Don't forget to get them something nice! ${birthday.otherInfo}`
+      html: `
+      <table style="width:100%; border:5px dotted pink; padding: 20px;text-align:center"
+        <tr>
+          <th style="height:70px; font-size:32px">Hey there!</th>
+        </tr>
+        <tr style="height:40px">
+          <td>
+          Looks like <b>${birthday.firstName} ${birthday.lastName}</b> has a birthday 
+          ${difference === 0 ? 'TODAY! 🎈🎈' : `in ${difference} days!`}
+          </td>
+        </tr>
+        <tr style="height:40px">
+          <td>Don't forget to get them something nice!</td>
+        </tr>
+        <tr style="height:40px">
+          <td>Your notes:</td>
+        </tr>
+        <tr style="height:40px">
+          <td>
+            <i>
+              <span style="font-size:20px">“</span>
+              ${birthday.otherInfo}
+              <span style="font-size:20px">”</span>
+            </i>
+          </td>
+        </tr>
+      </table>
+      `
     };
 
     mailTransporter.sendMail(mailDetails, (err, data) => {
