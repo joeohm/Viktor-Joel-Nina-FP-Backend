@@ -1,11 +1,11 @@
-import express from "express";
-import cors from "cors";
-import mongoose from "mongoose";
-import crypto from "crypto";
-import bcrypt from "bcrypt";
-import MailService from "./MailService";
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import { MailService } from './MailService';
 
-const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
+const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost/project-final';
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
@@ -29,8 +29,8 @@ const cronJob = {
 
 cron.schedule(cronJob.schedule, async () => {
   // Get all birthdays, find matching reminder settings and send email to respective user
-  const birthdays = await Birthday.find()
-  const users = await User.find()
+  const birthdays = await Birthday.find();
+  const users = await User.find();
   MailService(birthdays, users);
 });
 ////////////////////////////////////////
@@ -41,7 +41,7 @@ mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid';
 const UserSchema = new mongoose.Schema({
   username: {
     type: mongoose.SchemaTypes.Email,
-    required: true, 
+    required: true,
     correctTld: true,
     unique: true
   },
@@ -51,16 +51,18 @@ const UserSchema = new mongoose.Schema({
   },
   accessToken: {
     type: String,
-    default: () => crypto.randomBytes(128).toString("hex")
+    default: () => crypto.randomBytes(128).toString('hex')
   },
-  birthdayReminders: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Birthday"
-  }]
+  birthdayReminders: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Birthday'
+    }
+  ]
 });
 
 const BirthdaySchema = new mongoose.Schema({
- firstName: {
+  firstName: {
     type: String,
     required: true
   },
@@ -72,9 +74,9 @@ const BirthdaySchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  userId: { 
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: 'User',
     required: true
   },
   birthdayReminderSettings: {
@@ -85,25 +87,28 @@ const BirthdaySchema = new mongoose.Schema({
     type: String,
     maxlength: 250
   }
-})
+});
 
-const User = mongoose.model("User", UserSchema);
-const Birthday = mongoose.model("Birthday", BirthdaySchema);
+const User = mongoose.model('User', UserSchema);
+const Birthday = mongoose.model('Birthday', BirthdaySchema);
 
 ///////////// Endpoints for user ////////////////////
 
-app.post("/register", async (req, res) => {
+app.post('/register', async (req, res) => {
   const { username, password } = req.body;
-  console.log(req.body)
+  console.log(req.body);
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
       res.status(400).json({
         success: false,
-        response: "Password must be at least 8 characters long"
+        response: 'Password must be at least 8 characters long'
       });
     } else {
-      const newUser = await new User({username, password: bcrypt.hashSync(password, salt)}).save();
+      const newUser = await new User({
+        username,
+        password: bcrypt.hashSync(password, salt)
+      }).save();
       res.status(201).json({
         success: true,
         response: {
@@ -113,19 +118,19 @@ app.post("/register", async (req, res) => {
         }
       });
     }
-  } catch(error) {
-      res.status(400).json({
-        success: false,
-        response: error
-      });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
   }
 });
 
-app.post("/login", async (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const user = await User.findOne({username});
+    const user = await User.findOne({ username });
     if (user && bcrypt.compareSync(password, user.password)) {
       res.status(200).json({
         success: true,
@@ -150,39 +155,37 @@ app.post("/login", async (req, res) => {
 });
 
 const authenticateUser = async (req, res, next) => {
-  const accessToken = req.header("Authorization");
+  const accessToken = req.header('Authorization');
   try {
-    const user = await User.findOne({accessToken: accessToken});
+    const user = await User.findOne({ accessToken: accessToken });
     if (user) {
       next();
     } else {
       res.status(401).json({
-        response: "Please log in",
+        response: 'Please log in',
         success: false
-      })
+      });
     }
   } catch (error) {
     res.status(400).json({
       response: error,
       success: false
-    })
+    });
   }
-}
+};
 
 app.delete('/user', authenticateUser);
 app.delete('/user', async (req, res) => {
   const { id } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   const userToDelete = await User.findByIdAndDelete(id);
   try {
     if (userToDelete) {
       res.status(200).json(userToDelete);
     } else {
-      res
-        .status(404)
-        .json({ success: false, response: 'User was not found' });
+      res.status(404).json({ success: false, response: 'User was not found' });
     }
   } catch (error) {
     res.status(400).json({
@@ -193,21 +196,21 @@ app.delete('/user', async (req, res) => {
 });
 
 app.patch('/change-password', authenticateUser);
-app.patch("/change-password", async (req, res) => {
+app.patch('/change-password', async (req, res) => {
   const { id, password } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
       res.status(400).json({
         success: false,
-        response: "Password must be at least 8 characters long"
+        response: 'Password must be at least 8 characters long'
       });
     } else {
       const passwordToUpdate = await User.findByIdAndUpdate(
-        {_id: id},
-        {password: bcrypt.hashSync(password, salt)},
+        { _id: id },
+        { password: bcrypt.hashSync(password, salt) },
         { new: true }
       );
       res.status(200).json({
@@ -215,11 +218,11 @@ app.patch("/change-password", async (req, res) => {
         response: passwordToUpdate
       });
     }
-  } catch(error) {
-      res.status(400).json({
-        success: false,
-        response: error
-      });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      response: error
+    });
   }
 });
 
@@ -228,28 +231,49 @@ app.patch("/change-password", async (req, res) => {
 //////// Endpoints for birthday reminders ///////////
 
 app.post('/birthday', authenticateUser);
-app.post("/birthday", async (req, res) => {
-  const {firstName, lastName, birthDate, userId, birthdayReminderSettings, otherInfo} = req.body;
+app.post('/birthday', async (req, res) => {
+  const {
+    firstName,
+    lastName,
+    birthDate,
+    userId,
+    birthdayReminderSettings,
+    otherInfo
+  } = req.body;
 
-  console.log("birthDate:", birthDate)
+  console.log('birthDate:', birthDate);
 
   try {
-    const newBirthday = await new Birthday({firstName, lastName, birthDate, userId, birthdayReminderSettings, otherInfo}).save();
-    res.status(201).json({success: true, response: newBirthday});
-  }catch (error){
-    res.status(400).json({success: false, response: error});
+    const newBirthday = await new Birthday({
+      firstName,
+      lastName,
+      birthDate,
+      userId,
+      birthdayReminderSettings,
+      otherInfo
+    }).save();
+    res.status(201).json({ success: true, response: newBirthday });
+  } catch (error) {
+    res.status(400).json({ success: false, response: error });
   }
 });
 
 app.patch('/birthday', authenticateUser);
 app.patch('/birthday', async (req, res) => {
-  const {firstName, lastName, birthDate, id, birthdayReminderSettings, otherInfo} = req.body;
+  const {
+    firstName,
+    lastName,
+    birthDate,
+    id,
+    birthdayReminderSettings,
+    otherInfo
+  } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   const birthdayToUpdate = await Birthday.findByIdAndUpdate(
-    {_id: id},
-    { 
+    { _id: id },
+    {
       firstName: firstName,
       lastName: lastName,
       birthDate: birthDate,
@@ -279,7 +303,7 @@ app.delete('/birthday', authenticateUser);
 app.delete('/birthday', async (req, res) => {
   const { id } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   const birthdayToDelete = await Birthday.findByIdAndDelete(id);
   try {
@@ -302,7 +326,7 @@ app.get('/birthday', authenticateUser);
 app.get('/birthday', async (req, res) => {
   const { id } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   const birthday = await Birthday.findById(id);
   try {
@@ -325,10 +349,10 @@ app.get('/all-birthdays', authenticateUser);
 app.get('/all-birthdays', async (req, res) => {
   const { userId } = req.body;
 
-  console.log(req.body)
+  console.log(req.body);
 
   // const birthdays = await Birthday.findById(userId);
-  const birthdays = await Birthday.find({userId})
+  const birthdays = await Birthday.find({ userId });
 
   try {
     if (birthdays) {
@@ -346,10 +370,9 @@ app.get('/all-birthdays', async (req, res) => {
   }
 });
 
-
 // Put in express list node
-app.get("/", (req, res) => {
-  res.send("Hello Viktor, Joel and Nina");
+app.get('/', (req, res) => {
+  res.send('Hello Viktor, Joel and Nina');
 });
 
 app.get('/cron', (req, res) => {
@@ -357,7 +380,6 @@ app.get('/cron', (req, res) => {
     cron: cronJob
   });
 });
-
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
