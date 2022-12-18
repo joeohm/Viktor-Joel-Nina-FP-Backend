@@ -4,6 +4,8 @@ import mongoose from 'mongoose';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import { MailService } from './MailService';
+import 'regenerator-runtime/runtime'
+
 
 const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost/project-final';
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -11,6 +13,7 @@ mongoose.Promise = Promise;
 
 const port = process.env.PORT || 8080;
 const app = express();
+module.exports = app
 
 app.use(cors());
 app.use(express.json());
