@@ -21,13 +21,13 @@ dotenv.config();
 /////////// EMAIL-SENDER /////////////
 const cron = require('node-cron');
 const cronJob = {
-  // every2sec: '*/2 * * * * *',
+  every2sec: '*/2 * * * * *',
   testSchedule: '*/1 * * * *',
   schedule: '0 7 * * *',
   info: '“At 07:00 GMT every day .”'
 };
 
-cron.schedule(cronJob.schedule, async () => {
+cron.schedule(cronJob.every2sec, async () => {
   // Get all birthdays, find matching reminder settings and send email to respective user
   const birthdays = await Birthday.find();
   const users = await User.find();

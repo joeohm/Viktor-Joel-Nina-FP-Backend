@@ -52,7 +52,7 @@ export const MailService = (birthdays, users) => {
       console.log(email);
 
       let mailDetails = {
-        from: 'birthdayremindersender@gmail.com',
+        from: 'The Happy Birthday Team <birthdayremindersender@gmail.com>',
         to: email,
         subject: 'Birthday reminder!',
         html: `
