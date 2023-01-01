@@ -11,12 +11,24 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost/project-final';
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
+// This enables to get a list of all routes, here used in main page
+const listEndpoints = require('express-list-endpoints');
+
 const port = process.env.PORT || 8080;
 const app = express();
 module.exports = app
 
 app.use(cors());
 app.use(express.json());
+
+// Middleware set up for error msg like DB down.
+app.use((req, res, next) => {
+  if (mongoose.connection.readyState === 1) {
+    next()
+  } else {
+    res.status(503).json({ error: 'Service unavailable' })
+  }
+}) 
 
 const dotenv = require('dotenv');
 dotenv.config();
@@ -96,6 +108,13 @@ const User = mongoose.model('User', UserSchema);
 const Birthday = mongoose.model('Birthday', BirthdaySchema);
 
 ///////////// Endpoints for user ////////////////////
+
+// Listing awailable endpoints 
+app.get('/', (req, res) => {
+  res.json(listEndpoints(app));
+});
+
+///////////
 
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
