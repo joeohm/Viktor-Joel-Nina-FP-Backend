@@ -2,14 +2,14 @@ const request = require("supertest");
 const app = require("../server");
 
 describe("Test Endpoints", () => {
-  let accessToken, username, id, birthdayId;
+  let accessToken, id, birthdayId;
   it("should create a new user", async () => {
     const res = await request(app).post("/register").send({
       username: "testy@mctestersson.com",
       password: "testymctestersson",
     });
 
-    ({ accessToken, username, id } = res.body.response);
+    ({ accessToken, id } = res.body.response);
     expect(res.status).toEqual(201);
     expect(res.body.success).toEqual(true);
   });
@@ -52,7 +52,6 @@ describe("Test Endpoints", () => {
 
     birthdayId = res.body.response._id;
 
-    console.log("birthdayId:", birthdayId);
     expect(res.status).toEqual(201);
     expect(res.body.success).toEqual(true);
     expect(res.body.response.userId).toEqual(id);
@@ -66,7 +65,7 @@ describe("Test Endpoints", () => {
         lastName: "McTestersson",
         birthDate: "1995-01-04",
         id: birthdayId,
-        birthdayReminderSettings: [0, 2, 7, 30],
+        birthdayReminderSettings: [0, 7],
         otherInfo: "Chocolate mousse with dark chocolate shavings",
       })
       .set("Authorization", accessToken);
