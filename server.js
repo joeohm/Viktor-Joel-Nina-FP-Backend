@@ -22,7 +22,7 @@ app.use(express.json());
 
 // Middleware set up for error msg like DB down.
 app.use((req, res, next) => {
-  if (mongoose.connection.readyState === 1) {
+  if (mongoose.connection.readyState > 0) {
     next();
   } else {
     res.status(503).json({ error: "Service unavailable" });
