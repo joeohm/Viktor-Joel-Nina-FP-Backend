@@ -35,8 +35,7 @@ dotenv.config();
 /////////// EMAIL-SENDER /////////////
 const cron = require("node-cron");
 const cronJob = {
-  every2sec: "*/2 * * * * *",
-  testSchedule: "*/1 * * * *",
+  testSchedule: "*/2 * * * * *",
   schedule: "0 7 * * *",
   info: "“At 07:00 GMT every day .”",
 };
