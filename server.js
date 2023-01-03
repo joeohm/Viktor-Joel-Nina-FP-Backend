@@ -1,22 +1,21 @@
-import express from 'express';
-import cors from 'cors';
-import mongoose from 'mongoose';
-import crypto from 'crypto';
-import bcrypt from 'bcrypt';
-import { MailService } from './MailService';
-import 'regenerator-runtime/runtime'
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
+import crypto from "crypto";
+import bcrypt from "bcrypt";
+import { MailService } from "./MailService";
+import "regenerator-runtime/runtime";
 
-
-const mongoUrl = process.env.MONGO_URL || 'mongodb://localhost/project-final';
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
 // This enables to get a list of all routes, here used in main page
-const listEndpoints = require('express-list-endpoints');
+const listEndpoints = require("express-list-endpoints");
 
 const port = process.env.PORT || 8080;
 const app = express();
-module.exports = app
+module.exports = app;
 
 app.use(cors());
 app.use(express.json());
@@ -24,22 +23,22 @@ app.use(express.json());
 // Middleware set up for error msg like DB down.
 app.use((req, res, next) => {
   if (mongoose.connection.readyState === 1) {
-    next()
+    next();
   } else {
-    res.status(503).json({ error: 'Service unavailable' })
+    res.status(503).json({ error: "Service unavailable" });
   }
-}) 
+});
 
-const dotenv = require('dotenv');
+const dotenv = require("dotenv");
 dotenv.config();
 
 /////////// EMAIL-SENDER /////////////
-const cron = require('node-cron');
+const cron = require("node-cron");
 const cronJob = {
-  // every2sec: '*/2 * * * * *',
-  testSchedule: '*/1 * * * *',
-  schedule: '0 7 * * *',
-  info: '“At 07:00 GMT every day .”'
+  every2sec: "*/2 * * * * *",
+  testSchedule: "*/1 * * * *",
+  schedule: "0 7 * * *",
+  info: "“At 07:00 GMT every day .”",
 };
 
 cron.schedule(cronJob.schedule, async () => {
@@ -50,73 +49,73 @@ cron.schedule(cronJob.schedule, async () => {
 });
 ////////////////////////////////////////
 
-require('mongoose-type-email');
-mongoose.SchemaTypes.Email.defaults.message = 'Email address is invalid';
+require("mongoose-type-email");
+mongoose.SchemaTypes.Email.defaults.message = "Email address is invalid";
 
 const UserSchema = new mongoose.Schema({
   username: {
     type: mongoose.SchemaTypes.Email,
     required: true,
     correctTld: true,
-    unique: true
+    unique: true,
   },
   password: {
     type: String,
-    required: true
+    required: true,
   },
   accessToken: {
     type: String,
-    default: () => crypto.randomBytes(128).toString('hex')
+    default: () => crypto.randomBytes(128).toString("hex"),
   },
   birthdayReminders: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Birthday'
-    }
-  ]
+      ref: "Birthday",
+    },
+  ],
 });
 
 const BirthdaySchema = new mongoose.Schema({
   firstName: {
     type: String,
-    required: true
+    required: true,
   },
   lastName: {
     type: String,
-    required: true
+    required: true,
   },
   birthDate: {
     type: Date,
-    required: true
+    required: true,
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    ref: "User",
+    required: true,
   },
   birthdayReminderSettings: {
     type: Array,
-    default: 0
+    default: 0,
   },
   otherInfo: {
     type: String,
-    maxlength: 250
-  }
+    maxlength: 250,
+  },
 });
 
-const User = mongoose.model('User', UserSchema);
-const Birthday = mongoose.model('Birthday', BirthdaySchema);
+const User = mongoose.model("User", UserSchema);
+const Birthday = mongoose.model("Birthday", BirthdaySchema);
 
 ///////////// Endpoints for user ////////////////////
 
-// Listing awailable endpoints 
-app.get('/', (req, res) => {
+// Listing awailable endpoints
+app.get("/", (req, res) => {
   res.json(listEndpoints(app));
 });
 
 ///////////
 
-app.post('/register', async (req, res) => {
+app.post("/register", async (req, res) => {
   const { username, password } = req.body;
   console.log(req.body);
   try {
@@ -124,31 +123,31 @@ app.post('/register', async (req, res) => {
     if (password.length < 8) {
       res.status(400).json({
         success: false,
-        response: 'Password must be at least 8 characters long'
+        response: "Password must be at least 8 characters long",
       });
     } else {
       const newUser = await new User({
         username,
-        password: bcrypt.hashSync(password, salt)
+        password: bcrypt.hashSync(password, salt),
       }).save();
       res.status(201).json({
         success: true,
         response: {
           accessToken: newUser.accessToken,
           username: newUser.username,
-          id: newUser._id
-        }
+          id: newUser._id,
+        },
       });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
-app.post('/login', async (req, res) => {
+app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
@@ -159,45 +158,45 @@ app.post('/login', async (req, res) => {
         response: {
           username: user.username,
           id: user._id,
-          accessToken: user.accessToken
-        }
+          accessToken: user.accessToken,
+        },
       });
     } else {
       res.status(400).json({
         success: false,
-        response: "Credentials didn't match"
+        response: "Credentials didn't match",
       });
     }
   } catch (error) {
     res.status(500).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
 const authenticateUser = async (req, res, next) => {
-  const accessToken = req.header('Authorization');
+  const accessToken = req.header("Authorization");
   try {
     const user = await User.findOne({ accessToken: accessToken });
     if (user) {
       next();
     } else {
       res.status(401).json({
-        response: 'Please log in',
-        success: false
+        response: "Please log in",
+        success: false,
       });
     }
   } catch (error) {
     res.status(400).json({
       response: error,
-      success: false
+      success: false,
     });
   }
 };
 
-app.delete('/user', authenticateUser);
-app.delete('/user', async (req, res) => {
+app.delete("/user", authenticateUser);
+app.delete("/user", async (req, res) => {
   const { id } = req.body;
 
   console.log(req.body);
@@ -207,18 +206,18 @@ app.delete('/user', async (req, res) => {
     if (userToDelete) {
       res.status(200).json(userToDelete);
     } else {
-      res.status(404).json({ success: false, response: 'User was not found' });
+      res.status(404).json({ success: false, response: "User was not found" });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
-app.patch('/change-password', authenticateUser);
-app.patch('/change-password', async (req, res) => {
+app.patch("/change-password", authenticateUser);
+app.patch("/change-password", async (req, res) => {
   const { id, password } = req.body;
 
   console.log(req.body);
@@ -227,7 +226,7 @@ app.patch('/change-password', async (req, res) => {
     if (password.length < 8) {
       res.status(400).json({
         success: false,
-        response: 'Password must be at least 8 characters long'
+        response: "Password must be at least 8 characters long",
       });
     } else {
       const passwordToUpdate = await User.findByIdAndUpdate(
@@ -237,13 +236,13 @@ app.patch('/change-password', async (req, res) => {
       );
       res.status(200).json({
         success: true,
-        response: passwordToUpdate
+        response: passwordToUpdate,
       });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
@@ -252,18 +251,18 @@ app.patch('/change-password', async (req, res) => {
 
 //////// Endpoints for birthday reminders ///////////
 
-app.post('/birthday', authenticateUser);
-app.post('/birthday', async (req, res) => {
+app.post("/birthday", authenticateUser);
+app.post("/birthday", async (req, res) => {
   const {
     firstName,
     lastName,
     birthDate,
     userId,
     birthdayReminderSettings,
-    otherInfo
+    otherInfo,
   } = req.body;
 
-  console.log('birthDate:', birthDate);
+  console.log("birthDate:", birthDate);
 
   try {
     const newBirthday = await new Birthday({
@@ -272,7 +271,7 @@ app.post('/birthday', async (req, res) => {
       birthDate,
       userId,
       birthdayReminderSettings,
-      otherInfo
+      otherInfo,
     }).save();
     res.status(201).json({ success: true, response: newBirthday });
   } catch (error) {
@@ -280,15 +279,15 @@ app.post('/birthday', async (req, res) => {
   }
 });
 
-app.patch('/birthday', authenticateUser);
-app.patch('/birthday', async (req, res) => {
+app.patch("/birthday", authenticateUser);
+app.patch("/birthday", async (req, res) => {
   const {
     firstName,
     lastName,
     birthDate,
     id,
     birthdayReminderSettings,
-    otherInfo
+    otherInfo,
   } = req.body;
 
   console.log(req.body);
@@ -300,7 +299,7 @@ app.patch('/birthday', async (req, res) => {
       lastName: lastName,
       birthDate: birthDate,
       birthdayReminderSettings: birthdayReminderSettings,
-      otherInfo: otherInfo
+      otherInfo: otherInfo,
     },
     { new: true }
   );
@@ -311,18 +310,18 @@ app.patch('/birthday', async (req, res) => {
     } else {
       res
         .status(404)
-        .json({ success: false, response: 'Birthday was not found' });
+        .json({ success: false, response: "Birthday was not found" });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
-app.delete('/birthday', authenticateUser);
-app.delete('/birthday', async (req, res) => {
+app.delete("/birthday", authenticateUser);
+app.delete("/birthday", async (req, res) => {
   const { id } = req.body;
 
   console.log(req.body);
@@ -334,18 +333,18 @@ app.delete('/birthday', async (req, res) => {
     } else {
       res
         .status(404)
-        .json({ success: false, response: 'Birthday was not found' });
+        .json({ success: false, response: "Birthday was not found" });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
-app.get('/birthday', authenticateUser);
-app.get('/birthday', async (req, res) => {
+app.get("/birthday", authenticateUser);
+app.get("/birthday", async (req, res) => {
   const { id } = req.body;
 
   console.log(req.body);
@@ -357,18 +356,18 @@ app.get('/birthday', async (req, res) => {
     } else {
       res
         .status(404)
-        .json({ success: false, response: 'Birthday was not found' });
+        .json({ success: false, response: "Birthday was not found" });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
-app.get('/all-birthdays', authenticateUser);
-app.get('/all-birthdays', async (req, res) => {
+app.get("/all-birthdays", authenticateUser);
+app.get("/all-birthdays", async (req, res) => {
   const { userId } = req.body;
 
   console.log(req.body);
@@ -382,24 +381,24 @@ app.get('/all-birthdays', async (req, res) => {
     } else {
       res
         .status(404)
-        .json({ success: false, response: 'Birthday was not found' });
+        .json({ success: false, response: "Birthday was not found" });
     }
   } catch (error) {
     res.status(400).json({
       success: false,
-      response: error
+      response: error,
     });
   }
 });
 
 // Put in express list node
-app.get('/', (req, res) => {
-  res.send('Hello Viktor, Joel and Nina');
+app.get("/", (req, res) => {
+  res.send("Hello Viktor, Joel and Nina");
 });
 
-app.get('/cron', (req, res) => {
+app.get("/cron", (req, res) => {
   res.json({
-    cron: cronJob
+    cron: cronJob,
   });
 });
 
