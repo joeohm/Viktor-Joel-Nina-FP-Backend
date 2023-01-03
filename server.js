@@ -201,8 +201,10 @@ app.delete("/user", async (req, res) => {
   console.log(req.body);
 
   const userToDelete = await User.findByIdAndDelete(id);
+
   try {
     if (userToDelete) {
+      console.log("user deleted:", userToDelete.username);
       res.status(200).json(userToDelete);
     } else {
       res.status(404).json({ success: false, response: "User was not found" });
