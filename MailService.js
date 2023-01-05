@@ -1,6 +1,6 @@
-import { differenceInDays } from 'date-fns';
+import { differenceInDays } from "date-fns";
 
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 export const convertDate = (birthDate) => {
   const day = String(birthDate.getDate()).padStart(2, 0);
@@ -9,7 +9,7 @@ export const convertDate = (birthDate) => {
   // If birthday is in January, but today is December, add 1 year to converted year
   // Since 30 days is the maximum setting, only do this for January
   const convertedYear =
-    month === '01' && new Date().getMonth() !== 0
+    month === "01" && new Date().getMonth() !== 0
       ? new Date().getFullYear() + 1
       : new Date().getFullYear();
 
@@ -21,8 +21,8 @@ export const MailService = (birthdays, users) => {
     service: process.env.MAILER_SERVICE,
     auth: {
       user: process.env.MAILER_USER,
-      pass: process.env.MAILER_PASSWORD
-    }
+      pass: process.env.MAILER_PASSWORD,
+    },
   });
 
   // For every birthday, compare the birthdate with current date
@@ -52,9 +52,9 @@ export const MailService = (birthdays, users) => {
       console.log(email);
 
       let mailDetails = {
-        from: 'The Happy Birthday Team <birthdayremindersender@gmail.com>',
+        from: "The Happy Birthday Team <birthdayremindersender@gmail.com>",
         to: email,
-        subject: 'Birthday reminder!',
+        subject: "Birthday reminder!",
         html: `
         <table style="width:100%; border:5px dotted pink; padding: 20px;text-align:center"
           <tr>
@@ -62,10 +62,11 @@ export const MailService = (birthdays, users) => {
           </tr>
           <tr style="height:40px">
             <td>
-            Looks like <b>${birthday.firstName} ${
+              Looks like <b>${birthday.firstName} ${
           birthday.lastName
-        }</b> has a birthday 
-            ${difference === 0 ? 'TODAY! 🎈🎈' : `in ${difference} days!`}
+        }</b> has a birthday ${
+          difference === 0 ? "TODAY! 🎈🎈" : `in ${difference} days!`
+        }
             </td>
           </tr>
           <tr style="height:40px">
@@ -84,15 +85,15 @@ export const MailService = (birthdays, users) => {
             </td>
           </tr>
         </table>
-        `
+        `,
       };
 
       mailTransporter.sendMail(mailDetails, (err, data) => {
         if (err) {
-          console.log('error occured', err.message);
+          console.log("error occured", err.message);
         } else {
-          console.log('-----------------------');
-          console.log('email sent successfully');
+          console.log("-----------------------");
+          console.log("email sent successfully");
         }
       });
     }
