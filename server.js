@@ -345,10 +345,10 @@ app.delete("/birthday", async (req, res) => {
 });
 
 app.get("/birthday", authenticateUser);
-app.get("/birthday", async (req, res) => {
-  const { id } = req.body;
+app.get("/birthday/:id", async (req, res) => {
+  const { id } = req.params.id;
 
-  console.log(req.body);
+  console.log(req.params.id);
 
   const birthday = await Birthday.findById(id);
   try {
