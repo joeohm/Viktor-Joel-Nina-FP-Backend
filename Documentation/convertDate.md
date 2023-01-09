@@ -12,6 +12,8 @@ A JavaScript `Date` object representing the converted date.
 
 ## Examples
 
+In these examples, it is assumed that the current date is 2023-02-09
+
 ```
 const birthDate = new Date('1995-01-01');
 console.log(convertDate(birthDate));
