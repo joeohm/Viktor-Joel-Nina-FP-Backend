@@ -344,11 +344,11 @@ app.delete("/birthday", async (req, res) => {
   }
 });
 
-app.get("/birthday", authenticateUser);
+app.get("/birthday/:id", authenticateUser);
 app.get("/birthday/:id", async (req, res) => {
-  const { id } = req.params.id;
+  const { id } = req.params;
 
-  console.log(req.params.id);
+  console.log(req.params);
 
   const birthday = await Birthday.findById(id);
   try {
@@ -367,11 +367,11 @@ app.get("/birthday/:id", async (req, res) => {
   }
 });
 
-app.get("/all-birthdays", authenticateUser);
-app.get("/all-birthdays", async (req, res) => {
-  const { userId } = req.body;
+app.get("/all-birthdays/:userId", authenticateUser);
+app.get("/all-birthdays/:userId", async (req, res) => {
+  const { userId } = req.params;
 
-  console.log(req.body);
+  console.log(req.params);
 
   // const birthdays = await Birthday.findById(userId);
   const birthdays = await Birthday.find({ userId });
