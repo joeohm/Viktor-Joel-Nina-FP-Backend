@@ -56,7 +56,7 @@ export const MailService = (birthdays, users) => {
         to: email,
         subject: "Birthday reminder!",
         html: `
-        <table style="width:100%; border:5px dotted pink; padding: 20px;text-align:center"
+        <table style="width:100%; border:5px dotted pink; padding: 20px;text-align:center max-width: 600px; margin: auto;"
           <tr>
             <th style="height:70px; font-size:32px">Hey there!</th>
           </tr>
