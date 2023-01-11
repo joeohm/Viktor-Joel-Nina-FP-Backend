@@ -205,7 +205,10 @@ app.delete("/user", async (req, res) => {
   try {
     if (userToDelete) {
       console.log("user deleted:", userToDelete.username);
-      res.status(200).json(userToDelete);
+      res.status(200).json({
+        success: true,
+        response: userToDelete,
+      });
     } else {
       res.status(404).json({ success: false, response: "User was not found" });
     }
