@@ -6,21 +6,23 @@ import bcrypt from "bcrypt";
 import { MailService } from "./MailService";
 import "regenerator-runtime/runtime";
 
+
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
 
-// This enables to get a list of all routes, here used in main page
-const listEndpoints = require("express-list-endpoints");
+// ------------------- Defined Port ------------------------
 
 const port = process.env.PORT || 8080;
 const app = express();
 module.exports = app;
 
+// ------------------- Middleweare ------------------------
+
 app.use(cors());
 app.use(express.json());
 
-// Middleware set up for error msg like DB down.
+
 app.use((req, res, next) => {
   if (mongoose.connection.readyState > 0) {
     next();
@@ -32,7 +34,8 @@ app.use((req, res, next) => {
 const dotenv = require("dotenv");
 dotenv.config();
 
-/////////// EMAIL-SENDER /////////////
+// ------------------- EMAIL-SENDER ------------------------
+
 const cron = require("node-cron");
 const cronJob = {
   testSchedule: "*/2 * * * * *",
@@ -46,10 +49,11 @@ cron.schedule(cronJob.schedule, async () => {
   const users = await User.find();
   MailService(birthdays, users);
 });
-////////////////////////////////////////
 
 require("mongoose-type-email");
 mongoose.SchemaTypes.Email.defaults.message = "Email address is invalid";
+
+// ------------------- Schemas ------------------------
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -102,21 +106,31 @@ const BirthdaySchema = new mongoose.Schema({
   },
 });
 
+// ------------------- Models ------------------------
+
 const User = mongoose.model("User", UserSchema);
 const Birthday = mongoose.model("Birthday", BirthdaySchema);
 
-///////////// Endpoints for user ////////////////////
 
-// Listing awailable endpoints
+////////////////////  Endpoints  //////////////////////
+
+
+const listEndpoints = require("express-list-endpoints");
+
 app.get("/", (req, res) => {
   res.json(listEndpoints(app));
 });
 
-///////////
+app.get("/cron", (req, res) => {
+  res.json({
+    cron: cronJob,
+  });
+});
+
 
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
-  console.log(req.body);
+ 
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
@@ -174,6 +188,8 @@ app.post("/login", async (req, res) => {
   }
 });
 
+// ------------------- Authentication ------------------------
+
 const authenticateUser = async (req, res, next) => {
   const accessToken = req.header("Authorization");
   try {
@@ -194,17 +210,18 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
+// ------------------- Endpoints User ------------------------
+
+// -------------- DELETE method user ------------------
+
 app.delete("/user", authenticateUser);
 app.delete("/user", async (req, res) => {
   const { id } = req.body;
-
-  console.log(req.body);
 
   const userToDelete = await User.findByIdAndDelete(id);
 
   try {
     if (userToDelete) {
-      console.log("user deleted:", userToDelete.username);
       res.status(200).json({
         success: true,
         response: userToDelete,
@@ -220,11 +237,12 @@ app.delete("/user", async (req, res) => {
   }
 });
 
+// -------------- PATCH method user ------------------
+
 app.patch("/change-password", authenticateUser);
 app.patch("/change-password", async (req, res) => {
   const { id, password } = req.body;
 
-  console.log(req.body);
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
@@ -251,9 +269,10 @@ app.patch("/change-password", async (req, res) => {
   }
 });
 
-/////////////////////////////////////////////////////
+// ------------------- Endpoints Birthday ------------------------
 
-//////// Endpoints for birthday reminders ///////////
+
+// -------------- POST method Birthday ------------------
 
 app.post("/birthday", authenticateUser);
 app.post("/birthday", async (req, res) => {
@@ -265,8 +284,6 @@ app.post("/birthday", async (req, res) => {
     birthdayReminderSettings,
     otherInfo,
   } = req.body;
-
-  console.log("birthDate:", birthDate);
 
   try {
     const newBirthday = await new Birthday({
@@ -283,6 +300,8 @@ app.post("/birthday", async (req, res) => {
   }
 });
 
+// -------------- PATCH method Birthday ------------------
+
 app.patch("/birthday", authenticateUser);
 app.patch("/birthday", async (req, res) => {
   const {
@@ -293,8 +312,6 @@ app.patch("/birthday", async (req, res) => {
     birthdayReminderSettings,
     otherInfo,
   } = req.body;
-
-  console.log(req.body);
 
   const birthdayToUpdate = await Birthday.findByIdAndUpdate(
     { _id: id },
@@ -309,7 +326,6 @@ app.patch("/birthday", async (req, res) => {
   );
   try {
     if (birthdayToUpdate) {
-      console.log(birthdayToUpdate);
       res.status(200).json(birthdayToUpdate);
     } else {
       res
@@ -324,11 +340,11 @@ app.patch("/birthday", async (req, res) => {
   }
 });
 
+// -------------- DELETE method Birthday ------------------
+
 app.delete("/birthday", authenticateUser);
 app.delete("/birthday", async (req, res) => {
   const { id } = req.body;
-
-  console.log(req.body);
 
   const birthdayToDelete = await Birthday.findByIdAndDelete(id);
   try {
@@ -347,11 +363,11 @@ app.delete("/birthday", async (req, res) => {
   }
 });
 
+// -------------- GET method Birthday ------------------
+
 app.get("/birthday/:id", authenticateUser);
 app.get("/birthday/:id", async (req, res) => {
   const { id } = req.params;
-
-  console.log(req.params);
 
   const birthday = await Birthday.findById(id);
   try {
@@ -370,13 +386,11 @@ app.get("/birthday/:id", async (req, res) => {
   }
 });
 
+
 app.get("/all-birthdays/:userId", authenticateUser);
 app.get("/all-birthdays/:userId", async (req, res) => {
   const { userId } = req.params;
 
-  console.log(req.params);
-
-  // const birthdays = await Birthday.findById(userId);
   const birthdays = await Birthday.find({ userId });
 
   try {
@@ -395,16 +409,8 @@ app.get("/all-birthdays/:userId", async (req, res) => {
   }
 });
 
-// Put in express list node
-app.get("/", (req, res) => {
-  res.send("Hello Viktor, Joel and Nina");
-});
 
-app.get("/cron", (req, res) => {
-  res.json({
-    cron: cronJob,
-  });
-});
+// ------------------- Start Server ------------------------
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
