@@ -76,8 +76,7 @@ describe("Test Endpoints", () => {
 
   it("should get info about a particular birthday reminder for the test user", async () => {
     const res = await request(app)
-      .get("/birthday")
-      .send({ id: birthdayId })
+      .get(`/birthday/${birthdayId}`)
       .set("Authorization", accessToken);
 
     expect(res.status).toEqual(200);
@@ -86,8 +85,8 @@ describe("Test Endpoints", () => {
 
   it("should get info about all birthday reminders for the test user", async () => {
     const res = await request(app)
-      .get("/all-birthdays")
-      .send({ userId: id })
+      .get(`/all-birthdays/${id}`)
+      // .send({ userId: id })
       .set("Authorization", accessToken);
 
     expect(res.status).toEqual(200);
@@ -111,6 +110,6 @@ describe("Test Endpoints", () => {
       .set("Authorization", accessToken);
 
     expect(res.status).toEqual(200);
-    expect(res.body._id.toString()).toEqual(id);
+    expect(res.body.response._id.toString()).toEqual(id);
   });
 });
