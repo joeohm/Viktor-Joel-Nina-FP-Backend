@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 import { MailService } from "./MailService";
 import "regenerator-runtime/runtime";
 
-
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/project-final";
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.Promise = Promise;
@@ -21,7 +20,6 @@ module.exports = app;
 
 app.use(cors());
 app.use(express.json());
-
 
 app.use((req, res, next) => {
   if (mongoose.connection.readyState > 0) {
@@ -111,9 +109,7 @@ const BirthdaySchema = new mongoose.Schema({
 const User = mongoose.model("User", UserSchema);
 const Birthday = mongoose.model("Birthday", BirthdaySchema);
 
-
 ////////////////////  Endpoints  //////////////////////
-
 
 const listEndpoints = require("express-list-endpoints");
 
@@ -127,10 +123,9 @@ app.get("/cron", (req, res) => {
   });
 });
 
-
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
- 
+
   try {
     const salt = bcrypt.genSaltSync();
     if (password.length < 8) {
@@ -271,7 +266,6 @@ app.patch("/change-password", async (req, res) => {
 
 // ------------------- Endpoints Birthday ------------------------
 
-
 // -------------- POST method Birthday ------------------
 
 app.post("/birthday", authenticateUser);
@@ -386,7 +380,6 @@ app.get("/birthday/:id", async (req, res) => {
   }
 });
 
-
 app.get("/all-birthdays/:userId", authenticateUser);
 app.get("/all-birthdays/:userId", async (req, res) => {
   const { userId } = req.params;
@@ -408,7 +401,6 @@ app.get("/all-birthdays/:userId", async (req, res) => {
     });
   }
 });
-
 
 // ------------------- Start Server ------------------------
 
