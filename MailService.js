@@ -1,8 +1,9 @@
 import { differenceInDays } from "date-fns";
+import { getMailDetails } from "./util";
 
 const nodemailer = require("nodemailer");
 
-export const convertDate = (birthDate) => {
+export const convertDate = birthDate => {
   const day = String(birthDate.getDate()).padStart(2, 0);
   const month = String(birthDate.getMonth() + 1).padStart(2, 0); // getMonth() starts at 0
 
@@ -27,7 +28,7 @@ export const MailService = (birthdays, users) => {
 
   // For every birthday, compare the birthdate with current date
   // if the difference in days matches one of the birthdayReminderSettings, send email
-  birthdays.forEach((birthday) => {
+  birthdays.forEach(birthday => {
     const { birthDate, birthdayReminderSettings } = birthday;
 
     // In order to check for reminders every year, convert the birthdate to current year
@@ -41,58 +42,23 @@ export const MailService = (birthdays, users) => {
 
     // Check if difference between dates corresponds with one of the settings for reminders
     const shouldSendEmail = birthdayReminderSettings.some(
-      (setting) => setting === difference
+      setting => setting === difference
     );
 
     if (shouldSendEmail) {
       // Find the email of the owner of the birthday reminder
       const email = users.find(
-        (user) => user._id.toString() === birthday.userId.toString()
+        user => user._id.toString() === birthday.userId.toString()
       ).username;
-      console.log(email);
 
-      let mailDetails = {
-        from: "The Happy Birthday Team <birthdayremindersender@gmail.com>",
-        to: email,
-        subject: "Birthday reminder!",
-        html: `
-        <table style="width:100%; border:5px dotted #f0c8b0; color: #303346; padding: 20px;text-align:center; max-width: 600px; margin: auto;"
-          <tr>
-            <th style="height:70px; font-size:32px">Hey there!</th>
-          </tr>
-          <tr style="height:40px">
-            <td>
-              Looks like <b>${birthday.firstName} ${
-          birthday.lastName
-        }</b> has a birthday ${
-          difference === 0 ? "TODAY! 🎈🎈" : `in ${difference} days!`
-        }
-            </td>
-          </tr>
-          <tr style="height:40px">
-            <td>Don't forget to get them something nice!</td>
-          </tr>
-          <tr style="height:40px">
-            <td>Your notes:</td>
-          </tr>
-          <tr style="height:40px">
-            <td>
-              <i>
-                <span style="font-size:20px">“</span>
-                ${birthday.otherInfo}
-                <span style="font-size:20px">”</span>
-              </i>
-            </td>
-          </tr>
-        </table>
-        `,
-      };
+      const mailDetails = getMailDetails(email, birthday, difference);
 
       mailTransporter.sendMail(mailDetails, (err, data) => {
         if (err) {
           console.log("error occured", err.message);
         } else {
           console.log("-----------------------");
+          console.log(email);
           console.log("email sent successfully");
         }
       });
